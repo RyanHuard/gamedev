@@ -11,6 +11,7 @@ var level := 1
 var upgrade_a := 0
 var upgrade_b := 0
 var cooldown := 0.0
+var reload_duration := 0.0
 var selected := false
 var operated := false
 var total_spent := 0
@@ -49,7 +50,9 @@ func setup(type: String, game_node: Node2D, new_pad: int) -> void:
 	queue_redraw()
 
 func _process(delta: float) -> void:
-	cooldown -= delta
+	cooldown = maxf(0.0, cooldown - delta)
+	if operated:
+		queue_redraw()
 	if shot_time > 0.0:
 		shot_time = maxf(shot_time - delta, 0.0)
 		queue_redraw()
@@ -72,6 +75,7 @@ func fire(target: Node2D, info: Dictionary, operator_boost: bool) -> void:
 	else:
 		fire_rate *= 1.35
 	cooldown = fire_rate
+	reload_duration = fire_rate
 	shot_direction = position.direction_to(target.position)
 	shot_time = shot_duration
 	queue_redraw()
@@ -96,7 +100,13 @@ func set_operated(value: bool) -> void:
 	operated = value
 	if operated:
 		cooldown = minf(cooldown, 0.15)
+		reload_duration = maxf(cooldown, 0.15)
 	queue_redraw()
+
+func get_reload_progress() -> float:
+	if cooldown <= 0.0 or reload_duration <= 0.0:
+		return 1.0
+	return clampf(1.0 - cooldown / reload_duration, 0.0, 1.0)
 
 func get_upgrade_cost() -> int: return 45 + level * 25
 
@@ -129,7 +139,12 @@ func _draw() -> void:
 		draw_circle(Vector2.ZERO, radius, range_color)
 		draw_arc(Vector2.ZERO, radius, 0, TAU, 48, outline_color, 2)
 	if operated:
-		draw_arc(Vector2.ZERO, 39.0, 0, TAU, 28, Color("#ffd65a"), 4.0)
+		var reload_progress := get_reload_progress()
+		var reload_radius := 35.0
+		draw_arc(Vector2.ZERO, reload_radius, -PI / 2.0, TAU - PI / 2.0, 24, Color(0.02, 0.12, 0.18, 0.55), 2.5)
+		if reload_progress > 0.0:
+			var reload_color := Color(0.53, 0.97, 0.87, 0.85) if reload_progress >= 1.0 else Color(1.0, 0.84, 0.35, 0.82)
+			draw_arc(Vector2.ZERO, reload_radius, -PI / 2.0, -PI / 2.0 + TAU * reload_progress, 24, reload_color, 2.5)
 	var texture := ShellShooterTexture
 	if tower_type == "seaweed": texture = SeaweedSnareTexture
 	elif tower_type == "urchin": texture = UrchinCannonTexture

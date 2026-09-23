@@ -1,14 +1,17 @@
 extends Node2D
 
 const CrabTexture = preload("res://assets/player/crab_operator.png")
-const MOVE_SPEED := 255.0
+const CrabWalkATexture = preload("res://assets/player/crab_operator_walk_a.png")
+const CrabWalkBTexture = preload("res://assets/player/crab_operator_walk_b.png")
+const MOVE_SPEED := 185.0
 const OPERATE_RADIUS := 76.0
 
 var game: Node2D
 var operated_tower: Node2D
 var animation_time := 0.0
 var interaction_latched := false
-var mount_approach_direction := Vector2.DOWN
+var movement_active := false
+var last_move_direction := Vector2.DOWN
 
 func setup(game_node: Node2D, start_position: Vector2) -> void:
 	game = game_node
@@ -20,18 +23,22 @@ func setup(game_node: Node2D, start_position: Vector2) -> void:
 func _process(delta: float) -> void:
 	animation_time += delta
 	if not is_instance_valid(game) or game.game_over or game.level_select_menu.visible:
+		movement_active = false
 		queue_redraw()
 		return
 	if is_instance_valid(operated_tower):
 		# The crab is physically mounted and cannot walk until the player dismounts.
+		movement_active = false
 		position = operated_tower.position
 	else:
 		var direction := Vector2(
 			float(Input.is_key_pressed(KEY_D) or Input.is_key_pressed(KEY_RIGHT)) - float(Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_LEFT)),
 			float(Input.is_key_pressed(KEY_S) or Input.is_key_pressed(KEY_DOWN)) - float(Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_UP))
 		)
+		movement_active = direction.length_squared() > 0.0
 		if direction.length_squared() > 0.0:
-			position += direction.normalized() * MOVE_SPEED * delta
+			last_move_direction = direction.normalized()
+			position += last_move_direction * MOVE_SPEED * delta
 			position.x = clampf(position.x, 24.0, 1256.0)
 			position.y = clampf(position.y, 82.0, 696.0)
 	var pressing_interact := Input.is_key_pressed(KEY_E)
@@ -49,9 +56,6 @@ func toggle_operation() -> void:
 	if not is_instance_valid(nearest):
 		game.show_status("Move closer to a tower, then press E", 2.0)
 		return
-	mount_approach_direction = nearest.position.direction_to(position)
-	if mount_approach_direction.length_squared() < 0.01:
-		mount_approach_direction = Vector2.DOWN
 	operated_tower = nearest
 	position = operated_tower.position
 	operated_tower.set_operated(true)
@@ -62,15 +66,9 @@ func toggle_operation() -> void:
 	queue_redraw()
 
 func release_tower() -> void:
-	var dismount_position := position
 	if is_instance_valid(operated_tower):
-		dismount_position = operated_tower.position + mount_approach_direction * 58.0
 		operated_tower.set_operated(false)
 	operated_tower = null
-	position = Vector2(
-		clampf(dismount_position.x, 24.0, 1256.0),
-		clampf(dismount_position.y, 82.0, 696.0)
-	)
 	queue_redraw()
 
 func is_operating() -> bool:
@@ -82,15 +80,26 @@ func fire_at(screen_position: Vector2) -> bool:
 	return operated_tower.try_manual_fire(screen_position)
 
 func _draw() -> void:
-	var bob := sin(animation_time * 8.0) * 2.0
+	var scuttle := sin(animation_time * 13.0) * 1.5 if movement_active else 0.0
 	if is_instance_valid(operated_tower):
-		draw_texture_rect(CrabTexture, Rect2(Vector2(-18, -31 + bob), Vector2(36, 36)), false)
+		draw_texture_rect(CrabTexture, Rect2(Vector2(-18, -31), Vector2(36, 36)), false)
 	else:
-		draw_texture_rect(CrabTexture, Rect2(Vector2(-24, -24 + bob), Vector2(48, 48)), false)
+		# A blocky contact shadow and moving sand flecks keep the crab grounded on the seabed.
+		draw_rect(Rect2(Vector2(-21, 13), Vector2(42, 7)), Color(0.015, 0.12, 0.18, 0.38))
+		draw_rect(Rect2(Vector2(-15, 19), Vector2(30, 3)), Color(0.015, 0.12, 0.18, 0.24))
+		if movement_active:
+			var behind := -last_move_direction * 22.0
+			var sand_alpha: float = 0.28 + abs(sin(animation_time * 13.0)) * 0.20
+			draw_rect(Rect2(behind + Vector2(-5, -2), Vector2(4, 3)), Color(0.84, 0.76, 0.52, sand_alpha))
+			draw_rect(Rect2(behind + Vector2(5, 3), Vector2(3, 2)), Color(0.84, 0.76, 0.52, sand_alpha * 0.75))
+		var walking_texture := CrabTexture
+		if movement_active:
+			walking_texture = CrabWalkATexture if int(animation_time * 9.0) % 2 == 0 else CrabWalkBTexture
+		draw_texture_rect(walking_texture, Rect2(Vector2(-24 + scuttle, -24), Vector2(48, 48)), false)
 	var nearest: Node2D
 	if is_instance_valid(game) and not is_instance_valid(operated_tower):
 		nearest = game.get_nearest_tower(position, OPERATE_RADIUS)
 	if is_instance_valid(nearest):
-		draw_string(ThemeDB.fallback_font, Vector2(-42, -32 + bob), "E: OPERATE", HORIZONTAL_ALIGNMENT_CENTER, 84, 12, Color("#fff0a8"))
+		draw_string(ThemeDB.fallback_font, Vector2(-42, -32), "E: OPERATE", HORIZONTAL_ALIGNMENT_CENTER, 84, 12, Color("#fff0a8"))
 	elif is_instance_valid(operated_tower):
-		draw_string(ThemeDB.fallback_font, Vector2(-44, -48 + bob), "E: DISMOUNT", HORIZONTAL_ALIGNMENT_CENTER, 88, 11, Color("#fff0a8"))
+		draw_string(ThemeDB.fallback_font, Vector2(-44, -48), "E: DISMOUNT", HORIZONTAL_ALIGNMENT_CENTER, 88, 11, Color("#fff0a8"))
