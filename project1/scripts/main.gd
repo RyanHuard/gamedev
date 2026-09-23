@@ -18,11 +18,15 @@ const LEVEL_3_STARTING_GOLD := 340
 const LEVEL_3_STARTING_HEALTH := 25
 const FINAL_LEVEL := 3
 const PROGRESS_SAVE_PATH := "user://reefguard_progress.cfg"
+const TESTING_UNLOCK_ALL_LEVELS := true
 const TOP_BAR_HEIGHT := 64.0
 const OUTER_REEF_POSITION := Vector2(1180, 600)
 const MIDNIGHT_REEF_POSITION := Vector2(640, 385)
 const SHIPWRECK_RECT := Rect2(600, 345, 150, 58)
 const LEVEL_THREE_VENTS := [Vector2(315, 505), Vector2(685, 160), Vector2(970, 350)]
+const FLOOR_RIPPLE_ORIGINS := [Vector2(55, 650), Vector2(70, 250), Vector2(160, 135), Vector2(175, 500), Vector2(285, 390), Vector2(320, 610), Vector2(405, 520), Vector2(445, 115), Vector2(535, 265), Vector2(575, 430), Vector2(650, 590), Vector2(720, 240), Vector2(790, 400), Vector2(875, 650), Vector2(900, 145), Vector2(965, 470), Vector2(1035, 275), Vector2(1080, 665), Vector2(1160, 555), Vector2(1180, 360)]
+const FLOOR_SHELLS := [Vector2(65, 330), Vector2(115, 655), Vector2(145, 565), Vector2(205, 215), Vector2(300, 120), Vector2(385, 205), Vector2(430, 400), Vector2(505, 630), Vector2(610, 675), Vector2(690, 670), Vector2(735, 535), Vector2(790, 105), Vector2(850, 270), Vector2(940, 255), Vector2(975, 625), Vector2(1045, 555), Vector2(1115, 145), Vector2(1165, 690), Vector2(1220, 175), Vector2(1240, 475)]
+const WATER_PARTICLE_SEEDS := [Vector2(25, 215), Vector2(35, 120), Vector2(60, 625), Vector2(90, 520), Vector2(120, 250), Vector2(145, 360), Vector2(175, 665), Vector2(205, 205), Vector2(225, 455), Vector2(245, 590), Vector2(275, 135), Vector2(305, 435), Vector2(330, 555), Vector2(360, 275), Vector2(395, 185), Vector2(425, 650), Vector2(455, 375), Vector2(480, 505), Vector2(510, 225), Vector2(535, 335), Vector2(565, 675), Vector2(590, 150), Vector2(620, 550), Vector2(650, 455), Vector2(680, 295), Vector2(710, 620), Vector2(735, 110), Vector2(765, 195), Vector2(795, 485), Vector2(825, 335), Vector2(850, 570), Vector2(875, 675), Vector2(905, 235), Vector2(930, 535), Vector2(960, 115), Vector2(985, 355), Vector2(1010, 665), Vector2(1040, 175), Vector2(1065, 465), Vector2(1090, 605), Vector2(1120, 290), Vector2(1145, 420), Vector2(1170, 135), Vector2(1195, 265), Vector2(1215, 515), Vector2(1240, 650), Vector2(1255, 350), Vector2(1270, 105)]
 
 var level_one_path := PackedVector2Array([
 	Vector2(-40, 160), Vector2(220, 160), Vector2(220, 340),
@@ -127,6 +131,7 @@ var tutorial_label: Label
 var tutorial_upgrade_done := false
 var status_message_token := 0
 var crab_operator: Node2D
+var ocean_texture_time := 0.0
 
 func _ready() -> void:
 	active_paths = [level_one_path]
@@ -142,6 +147,7 @@ func _draw() -> void:
 	# Intentionally plain prototype art.
 	var ocean_color := Color("#052e58") if current_level == 3 else Color("#087ca7")
 	draw_rect(Rect2(0, 0, 1280, 720), ocean_color)
+	draw_floor_ripples_and_shells()
 	var preview_routes: Array[int] = []
 	if current_level == 3 and not wave_active and wave_index < waves.size():
 		for group in waves[wave_index]:
@@ -151,6 +157,7 @@ func _draw() -> void:
 		var route := active_paths[route_index]
 		draw_polyline(route, Color("#07506f"), 86.0, false)
 		draw_polyline(route, Color("#d1b878"), 68.0, false)
+		draw_track_texture(route, route_index)
 		if preview_routes.has(route_index):
 			draw_polyline(route, Color("#7deaff"), 6.0, false)
 	if current_level == 2:
@@ -166,6 +173,7 @@ func _draw() -> void:
 			draw_line(vent + Vector2(-21, 9), vent + Vector2(-5, -8), Color("#ff7438"), 5.0)
 			draw_line(vent + Vector2(-5, -8), vent + Vector2(9, 6), Color("#ffb347"), 4.0)
 			draw_line(vent + Vector2(9, 6), vent + Vector2(23, -10), Color("#ff7438"), 5.0)
+	draw_water_particles()
 	# Protected coral reef objective.
 	draw_texture_rect(CoralReefTexture, Rect2(coral_reef_position - Vector2(56, 56), Vector2(112, 112)), false)
 	draw_string(ThemeDB.fallback_font, coral_reef_position + Vector2(-48, 70), "CORAL REEF", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color.WHITE)
@@ -178,6 +186,54 @@ func _draw() -> void:
 		draw_texture_rect(get_tower_texture(dragging_type), Rect2(drag_position - Vector2(32, 32), Vector2(64, 64)), false)
 		draw_rect(Rect2(drag_position - Vector2(25, 25), Vector2(50, 50)), outline_color, false, 2.0)
 
+func draw_floor_ripples_and_shells() -> void:
+	# Small parallel wave marks resemble ripples pressed into seafloor sand.
+	for group_index in range(FLOOR_RIPPLE_ORIGINS.size()):
+		var origin: Vector2 = FLOOR_RIPPLE_ORIGINS[group_index]
+		for row in range(3):
+			var points := PackedVector2Array()
+			for point_index in range(7):
+				points.append(origin + Vector2(point_index * 11.0, row * 9.0 + sin(point_index * 1.35 + group_index) * 3.0))
+			draw_polyline(points, Color(0.55, 0.86, 0.85, 0.20), 2.0)
+	# A handful of compact shells add recognizable ocean-floor detail.
+	for i in range(FLOOR_SHELLS.size()):
+		var shell: Vector2 = FLOOR_SHELLS[i]
+		var shell_color := Color(0.95, 0.78, 0.52, 0.72)
+		draw_arc(shell, 9.0, PI, TAU, 10, shell_color, 3.0)
+		draw_line(shell + Vector2(-9, 0), shell + Vector2(9, 0), shell_color, 2.0)
+		for rib in range(3):
+			var x := -5.0 + rib * 5.0
+			draw_line(shell + Vector2(0, 1), shell + Vector2(x, -7), Color(0.78, 0.55, 0.36, 0.64), 1.5)
+
+func draw_track_texture(route: PackedVector2Array, route_index: int) -> void:
+	# Alternating sand grains follow the route while staying inside its darker border.
+	var grain_index := route_index * 3
+	for segment_index in range(route.size() - 1):
+		var start := route[segment_index]
+		var finish := route[segment_index + 1]
+		var segment_length := start.distance_to(finish)
+		var direction := start.direction_to(finish)
+		var normal := direction.orthogonal()
+		var steps := maxi(1, int(segment_length / 20.0))
+		for step in range(steps):
+			var progress := (step + 0.5) / float(steps)
+			var offset := normal * float((grain_index % 3) - 1) * 14.0
+			var grain_position := start.lerp(finish, progress) + offset
+			var grain_color := Color(0.48, 0.37, 0.20, 0.34) if grain_index % 2 == 0 else Color(1.0, 0.91, 0.67, 0.38)
+			draw_rect(Rect2(grain_position - Vector2(3, 2), Vector2(6, 4)), grain_color)
+			if grain_index % 4 == 0:
+				draw_line(grain_position + Vector2(-7, 7), grain_position + Vector2(7, 7), Color(0.55, 0.42, 0.25, 0.24), 2.0)
+			grain_index += 1
+
+func draw_water_particles() -> void:
+	for i in range(WATER_PARTICLE_SEEDS.size()):
+		var seed: Vector2 = WATER_PARTICLE_SEEDS[i]
+		var particle := Vector2(
+			fmod(seed.x + ocean_texture_time * (10.0 + i % 3 * 2.0), 1320.0) - 20.0,
+			70.0 + fmod(seed.y - 70.0 - ocean_texture_time * (4.0 + i % 2 * 1.5) + 650.0, 650.0)
+		)
+		var particle_size := 2.0 if i % 3 else 3.0
+		draw_rect(Rect2(particle, Vector2(particle_size, particle_size)), Color(0.72, 0.94, 0.94, 0.34))
 func build_hud() -> void:
 	var bar := ColorRect.new()
 	bar.position = Vector2.ZERO
@@ -411,6 +467,9 @@ func update_level_buttons() -> void:
 		level_buttons[i].tooltip_text = "" if unlocked else "Complete the previous level to unlock this reef."
 
 func load_progress() -> void:
+	if TESTING_UNLOCK_ALL_LEVELS:
+		highest_unlocked_level = FINAL_LEVEL
+		return
 	var config := ConfigFile.new()
 	if config.load(PROGRESS_SAVE_PATH) == OK:
 		highest_unlocked_level = clampi(int(config.get_value("progress", "highest_unlocked_level", 1)), 1, FINAL_LEVEL)
@@ -756,6 +815,8 @@ func start_next_wave() -> void:
 	queue_redraw()
 
 func _process(delta: float) -> void:
+	ocean_texture_time += delta
+	queue_redraw()
 	if not wave_active or game_over: return
 	if not spawn_queue.is_empty():
 		spawn_clock -= delta
