@@ -18,6 +18,7 @@ func setup(type: String, new_target: Node2D, game_node: Node2D, power: float, le
 	projectile_type = type
 	target = new_target
 	game = game_node
+	process_mode = Node.PROCESS_MODE_PAUSABLE
 	damage = power
 	tower_level = level
 	upgrade_a = new_upgrade_a

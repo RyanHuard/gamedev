@@ -48,6 +48,7 @@ static func get_upgrade_options(type: String) -> Array[Dictionary]:
 func setup(type: String, game_node: Node2D, new_pad: int) -> void:
 	tower_type = type
 	game = game_node
+	process_mode = Node.PROCESS_MODE_PAUSABLE
 	pad_index = new_pad
 	total_spent = get_tower_info(type).cost
 	z_index = 4

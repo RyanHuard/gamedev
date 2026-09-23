@@ -17,6 +17,7 @@ var mount_candidate: Node2D
 
 func setup(game_node: Node2D, start_position: Vector2) -> void:
 	game = game_node
+	process_mode = Node.PROCESS_MODE_PAUSABLE
 	position = start_position
 	z_index = 14
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST

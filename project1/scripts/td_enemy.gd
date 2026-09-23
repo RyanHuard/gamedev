@@ -26,6 +26,7 @@ var bonus_flash := 0.0
 var resist_flash := 0.0
 
 func setup(new_route: PackedVector2Array, data: Dictionary) -> void:
+	process_mode = Node.PROCESS_MODE_PAUSABLE
 	route = new_route
 	kind = data.kind
 	health = data.hp

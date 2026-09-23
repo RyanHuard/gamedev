@@ -12,10 +12,10 @@ const UrchinCannonTexture = preload("res://assets/towers/urchin_cannon.png")
 const CoralReefTexture = preload("res://assets/objectives/coral_reef.png")
 const STARTING_GOLD := 190
 const STARTING_HEALTH := 15
-const LEVEL_2_STARTING_GOLD := 280
-const LEVEL_2_STARTING_HEALTH := 20
-const LEVEL_3_STARTING_GOLD := 340
-const LEVEL_3_STARTING_HEALTH := 25
+const LEVEL_2_STARTING_GOLD := 350
+const LEVEL_2_STARTING_HEALTH := 25
+const LEVEL_3_STARTING_GOLD := 460
+const LEVEL_3_STARTING_HEALTH := 35
 const FINAL_LEVEL := 3
 const PROGRESS_SAVE_PATH := "user://reefguard_progress.cfg"
 const TESTING_UNLOCK_ALL_LEVELS := true
@@ -66,22 +66,22 @@ var level_three_paths: Array[PackedVector2Array] = [
 var level_one_waves := [
 	[{"kind":"plankton", "count":7, "hp":28.0, "speed":68.0, "reward":10}],
 	[{"kind":"plankton", "count":10, "hp":38.0, "speed":76.0, "reward":10}],
-	[{"kind":"plankton", "count":10, "hp":48.0, "speed":72.0, "reward":11}, {"kind":"stingray", "count":3, "hp":90.0, "speed":48.0, "reward":17}],
-	[{"kind":"plankton", "count":8, "hp":58.0, "speed":82.0, "reward":11}, {"kind":"stingray", "count":5, "hp":115.0, "speed":51.0, "reward":18}],
-	[{"kind":"plankton", "count":9, "hp":72.0, "speed":88.0, "reward":12}, {"kind":"stingray", "count":6, "hp":145.0, "speed":54.0, "reward":19}, {"kind":"sea_spider", "count":1, "hp":550.0, "speed":38.0, "reward":100}]
+	[{"kind":"plankton", "count":10, "hp":48.0, "speed":72.0, "reward":11}, {"kind":"stingray", "count":3, "hp":90.0, "speed":44.0, "reward":17}],
+	[{"kind":"plankton", "count":8, "hp":58.0, "speed":82.0, "reward":11}, {"kind":"stingray", "count":5, "hp":115.0, "speed":47.0, "reward":18}],
+	[{"kind":"plankton", "count":9, "hp":72.0, "speed":88.0, "reward":12}, {"kind":"stingray", "count":6, "hp":145.0, "speed":50.0, "reward":19}, {"kind":"sea_spider", "count":1, "hp":550.0, "speed":38.0, "reward":100}]
 ]
 var level_two_waves := [
-	[{"kind":"plankton", "count":6, "hp":58.0, "speed":82.0, "reward":11, "route":0}, {"kind":"plankton", "count":6, "hp":58.0, "speed":82.0, "reward":11, "route":1}],
-	[{"kind":"stingray", "count":4, "hp":130.0, "speed":53.0, "reward":18, "route":0}, {"kind":"plankton", "count":10, "hp":68.0, "speed":92.0, "reward":12, "route":1}],
-	[{"kind":"plankton", "count":7, "hp":82.0, "speed":96.0, "reward":12, "route":0}, {"kind":"stingray", "count":3, "hp":155.0, "speed":56.0, "reward":19, "route":0}, {"kind":"plankton", "count":7, "hp":82.0, "speed":96.0, "reward":12, "route":1}, {"kind":"stingray", "count":3, "hp":155.0, "speed":56.0, "reward":19, "route":1}],
-	[{"kind":"plankton", "count":8, "hp":98.0, "speed":102.0, "reward":13, "route":0}, {"kind":"stingray", "count":5, "hp":190.0, "speed":59.0, "reward":20, "route":0}, {"kind":"plankton", "count":8, "hp":98.0, "speed":102.0, "reward":13, "route":1}, {"kind":"stingray", "count":5, "hp":190.0, "speed":59.0, "reward":20, "route":1}],
-	[{"kind":"plankton", "count":8, "hp":115.0, "speed":106.0, "reward":14, "route":0}, {"kind":"sea_spider", "count":1, "hp":700.0, "speed":40.0, "reward":110, "route":0}, {"kind":"plankton", "count":8, "hp":115.0, "speed":106.0, "reward":14, "route":1}, {"kind":"sea_spider", "count":1, "hp":700.0, "speed":40.0, "reward":110, "route":1}]
+	[{"kind":"plankton", "count":5, "hp":50.0, "speed":78.0, "reward":11, "route":0}, {"kind":"plankton", "count":5, "hp":50.0, "speed":78.0, "reward":11, "route":1}],
+	[{"kind":"stingray", "count":3, "hp":110.0, "speed":47.0, "reward":18, "route":0}, {"kind":"plankton", "count":8, "hp":58.0, "speed":86.0, "reward":12, "route":1}],
+	[{"kind":"plankton", "count":6, "hp":68.0, "speed":90.0, "reward":12, "route":0}, {"kind":"stingray", "count":2, "hp":130.0, "speed":50.0, "reward":19, "route":0}, {"kind":"plankton", "count":6, "hp":68.0, "speed":90.0, "reward":12, "route":1}, {"kind":"stingray", "count":2, "hp":130.0, "speed":50.0, "reward":19, "route":1}],
+	[{"kind":"plankton", "count":6, "hp":82.0, "speed":96.0, "reward":13, "route":0}, {"kind":"stingray", "count":4, "hp":160.0, "speed":53.0, "reward":20, "route":0}, {"kind":"plankton", "count":6, "hp":82.0, "speed":96.0, "reward":13, "route":1}, {"kind":"stingray", "count":4, "hp":160.0, "speed":53.0, "reward":20, "route":1}],
+	[{"kind":"plankton", "count":6, "hp":95.0, "speed":100.0, "reward":14, "route":0}, {"kind":"sea_spider", "count":1, "hp":600.0, "speed":38.0, "reward":110, "route":0}, {"kind":"plankton", "count":6, "hp":95.0, "speed":100.0, "reward":14, "route":1}, {"kind":"sea_spider", "count":1, "hp":600.0, "speed":38.0, "reward":110, "route":1}]
 ]
 var level_three_waves := [
-	[{"kind":"plankton", "count":10, "hp":105.0, "speed":108.0, "reward":13, "route":0}, {"kind":"stingray", "count":3, "hp":190.0, "speed":60.0, "reward":20, "route":0}],
-	[{"kind":"plankton", "count":8, "hp":120.0, "speed":112.0, "reward":14, "route":1}, {"kind":"stingray", "count":6, "hp":215.0, "speed":63.0, "reward":21, "route":1}],
-	[{"kind":"plankton", "count":9, "hp":130.0, "speed":116.0, "reward":15, "route":0}, {"kind":"stingray", "count":4, "hp":235.0, "speed":65.0, "reward":22, "route":0}, {"kind":"plankton", "count":9, "hp":130.0, "speed":116.0, "reward":15, "route":2}, {"kind":"stingray", "count":4, "hp":235.0, "speed":65.0, "reward":22, "route":2}],
-	[{"kind":"plankton", "count":6, "hp":145.0, "speed":120.0, "reward":16, "route":0}, {"kind":"sea_spider", "count":1, "hp":850.0, "speed":43.0, "reward":120, "route":0}, {"kind":"plankton", "count":6, "hp":145.0, "speed":120.0, "reward":16, "route":1}, {"kind":"sea_spider", "count":1, "hp":850.0, "speed":43.0, "reward":120, "route":1}, {"kind":"plankton", "count":6, "hp":145.0, "speed":120.0, "reward":16, "route":2}, {"kind":"sea_spider", "count":1, "hp":850.0, "speed":43.0, "reward":120, "route":2}]
+	[{"kind":"plankton", "count":7, "hp":80.0, "speed":95.0, "reward":13, "route":0}, {"kind":"stingray", "count":2, "hp":150.0, "speed":52.0, "reward":20, "route":0}],
+	[{"kind":"plankton", "count":6, "hp":90.0, "speed":100.0, "reward":14, "route":1}, {"kind":"stingray", "count":3, "hp":165.0, "speed":54.0, "reward":21, "route":1}],
+	[{"kind":"plankton", "count":6, "hp":100.0, "speed":105.0, "reward":15, "route":0}, {"kind":"stingray", "count":2, "hp":185.0, "speed":56.0, "reward":22, "route":0}, {"kind":"plankton", "count":6, "hp":100.0, "speed":105.0, "reward":15, "route":2}, {"kind":"stingray", "count":2, "hp":185.0, "speed":56.0, "reward":22, "route":2}],
+	[{"kind":"plankton", "count":4, "hp":110.0, "speed":110.0, "reward":16, "route":0}, {"kind":"sea_spider", "count":1, "hp":650.0, "speed":40.0, "reward":120, "route":0}, {"kind":"plankton", "count":4, "hp":110.0, "speed":110.0, "reward":16, "route":1}, {"kind":"sea_spider", "count":1, "hp":650.0, "speed":40.0, "reward":120, "route":1}, {"kind":"plankton", "count":4, "hp":110.0, "speed":110.0, "reward":16, "route":2}, {"kind":"sea_spider", "count":1, "hp":650.0, "speed":40.0, "reward":120, "route":2}]
 ]
 var level_three_wave_names := ["WEST CURRENT", "NORTHEAST CURRENT", "WEST + SOUTHEAST", "ALL THREE CURRENTS"]
 var active_paths: Array[PackedVector2Array] = []
@@ -102,6 +102,7 @@ var dragging_type := ""
 var drag_position := Vector2.ZERO
 var drag_valid := false
 var game_over := false
+var game_paused := false
 var level_complete := false
 var current_level := 1
 var highest_unlocked_level := 1
@@ -122,6 +123,8 @@ var tower_name_labels: Array[Label] = []
 var tower_blurb_label: Label
 var level_select_menu: ColorRect
 var level_buttons: Array[Button] = []
+var resume_level_button: Button
+var level_select_can_resume := false
 var upgrade_menu: Panel
 var upgrade_title_label: Label
 var upgrade_option_buttons: Array[Button] = []
@@ -132,12 +135,14 @@ var upgrade_cost_labels: Array[Label] = []
 var status_panel: Panel
 var tutorial_panel: ColorRect
 var tutorial_label: Label
+var pause_button: Button
 var tutorial_upgrade_done := false
 var status_message_token := 0
 var crab_operator: Node2D
 var ocean_texture_time := 0.0
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	active_paths = [level_one_path]
 	waves = level_one_waves
 	load_progress()
@@ -276,19 +281,20 @@ func build_hud() -> void:
 	add_child(health_label)
 	add_child(wave_label)
 	var build_button := Button.new()
-	build_button.position = Vector2(1000, 11)
-	build_button.size = Vector2(120, 42)
+	build_button.position = Vector2(1070, 11)
+	build_button.size = Vector2(110, 42)
 	build_button.text = "BUILD"
 	build_button.add_theme_font_size_override("font_size", 17)
 	build_button.pressed.connect(toggle_build_menu)
 	add_child(build_button)
-	var wave_button := Button.new()
-	wave_button.position = Vector2(1130, 11)
-	wave_button.size = Vector2(130, 42)
-	wave_button.text = "START WAVE"
-	wave_button.add_theme_font_size_override("font_size", 15)
-	wave_button.pressed.connect(start_next_wave)
-	add_child(wave_button)
+	pause_button = Button.new()
+	pause_button.position = Vector2(1190, 11)
+	pause_button.size = Vector2(70, 42)
+	pause_button.text = "▶"
+	pause_button.tooltip_text = "Start the next wave"
+	pause_button.add_theme_font_size_override("font_size", 22)
+	pause_button.pressed.connect(toggle_wave_control)
+	add_child(pause_button)
 	build_tower_menu()
 	build_upgrade_menu()
 	build_tutorial_panel()
@@ -315,16 +321,26 @@ func build_tutorial_panel() -> void:
 	tutorial_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	tutorial_panel.z_index = 12
 	add_child(tutorial_panel)
-	tutorial_label = make_label(Vector2(12, 6), Vector2(556, 70), "", 15)
+	tutorial_label = make_label(Vector2(12, 6), Vector2(520, 70), "", 15)
 	tutorial_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	tutorial_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	tutorial_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	tutorial_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	tutorial_panel.add_child(tutorial_label)
+	var close_button := Button.new()
+	close_button.position = Vector2(540, 6)
+	close_button.size = Vector2(32, 30)
+	close_button.text = "×"
+	close_button.tooltip_text = "Dismiss message"
+	close_button.add_theme_font_size_override("font_size", 20)
+	close_button.pressed.connect(func(): tutorial_panel.visible = false)
+	tutorial_panel.add_child(close_button)
 	set_tutorial_message("Open BUILD menu and place a Shell Shooter in the water.")
 
 func set_tutorial_message(message: String) -> void:
-	if tutorial_label: tutorial_label.text = message
+	if tutorial_label:
+		tutorial_label.text = message
+		tutorial_panel.visible = true
 	if status_panel: clear_status()
 
 func build_upgrade_menu() -> void:
@@ -463,13 +479,31 @@ func build_level_select() -> void:
 	level_three_button.pressed.connect(choose_level.bind(3))
 	panel.add_child(level_three_button)
 	level_buttons.append(level_three_button)
+	resume_level_button = Button.new()
+	resume_level_button.position = Vector2(55, 335)
+	resume_level_button.size = Vector2(390, 36)
+	resume_level_button.text = "RESUME CURRENT LEVEL"
+	resume_level_button.add_theme_font_size_override("font_size", 15)
+	resume_level_button.pressed.connect(resume_current_level)
+	resume_level_button.visible = false
+	panel.add_child(resume_level_button)
 	update_level_buttons()
 
 func choose_level(level_number: int) -> void:
 	if level_number > highest_unlocked_level:
 		return
 	level_select_menu.visible = false
+	level_select_can_resume = false
+	resume_level_button.visible = false
 	start_level(level_number)
+
+func resume_current_level() -> void:
+	if not level_select_can_resume:
+		return
+	level_select_can_resume = false
+	resume_level_button.visible = false
+	level_select_menu.visible = false
+	set_game_paused(false)
 
 func update_level_buttons() -> void:
 	var names := ["Tutorial: Tidepool Reef", "Level 2: Shipwreck", "Level 3: Midnight Vent"]
@@ -606,15 +640,28 @@ func _input(event: InputEvent) -> void:
 		cancel_tower_drag()
 
 func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
+		if level_select_menu.visible:
+			resume_current_level()
+		else:
+			open_level_select()
+		return
 	if level_select_menu.visible:
 		return
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_SPACE:
+		if game_paused:
+			set_game_paused(false)
+			return
+		if wave_active:
+			set_game_paused(true)
+			return
 	if upgrade_menu.visible:
 		if event is InputEventKey and event.pressed and not event.echo:
 			if event.keycode == KEY_1:
 				choose_upgrade(0)
 			elif event.keycode == KEY_2:
 				choose_upgrade(1)
-			elif event.keycode == KEY_ESCAPE or event.keycode == KEY_U:
+			elif event.keycode == KEY_U:
 				upgrade_menu.visible = false
 		return
 	if event.is_action_pressed("restart"):
@@ -625,7 +672,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if game_over:
 		return
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed and is_instance_valid(crab_operator) and crab_operator.is_operating():
+	if not game_paused and event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed and is_instance_valid(crab_operator) and crab_operator.is_operating():
 		crab_operator.fire_at(event.position)
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
@@ -641,6 +688,16 @@ func _unhandled_input(event: InputEvent) -> void:
 			set_selected_tower(clicked)
 			return
 		set_selected_tower(null)
+
+func open_level_select() -> void:
+	cancel_tower_drag()
+	build_menu.visible = false
+	upgrade_menu.visible = false
+	set_game_paused(true)
+	update_level_buttons()
+	level_select_can_resume = true
+	resume_level_button.visible = true
+	level_select_menu.visible = true
 
 func start_tower_drag(type: String) -> void:
 	var index := ["shell", "seaweed", "urchin"].find(type)
@@ -779,7 +836,7 @@ func choose_upgrade(option: int) -> void:
 	selected_tower.upgrade(option)
 	if current_level == 1:
 		tutorial_upgrade_done = true
-		set_tutorial_message("Upgrade complete. Press X to sell a selected tower for 70% back, or start Wave 4.")
+		set_tutorial_message("Upgrade complete. Your tower is now stronger.")
 	upgrade_menu.visible = false
 	show_status(selected_tower.get_summary(), 2.0)
 	update_hud()
@@ -832,7 +889,34 @@ func start_next_wave() -> void:
 	update_hud()
 	queue_redraw()
 
+func set_game_paused(value: bool) -> void:
+	game_paused = value
+	get_tree().paused = value
+	update_wave_control()
+
+func toggle_wave_control() -> void:
+	if game_paused:
+		set_game_paused(false)
+	elif wave_active:
+		set_game_paused(true)
+	else:
+		start_next_wave()
+
+func update_wave_control() -> void:
+	if not is_instance_valid(pause_button):
+		return
+	pause_button.text = "⏸" if wave_active and not game_paused else "▶"
+	if game_paused:
+		pause_button.tooltip_text = "Resume the current wave"
+	elif wave_active:
+		pause_button.tooltip_text = "Pause the current wave"
+	else:
+		pause_button.tooltip_text = "Start the next wave"
+	pause_button.disabled = game_over or wave_index >= waves.size()
+
 func _process(delta: float) -> void:
+	if game_paused:
+		return
 	ocean_texture_time += delta
 	queue_redraw()
 	if not wave_active or game_over: return
@@ -900,17 +984,17 @@ func finish_wave() -> void:
 	var message := "Current is calm  •  Press Space when ready"
 	if current_level == 1 and wave_index == 1:
 		unlocked_towers = 2
-		set_tutorial_message("UNLOCKED: Seaweed Snare. Its vines slow enemies and set up bonus damage. Try it, or start Wave 2.")
+		set_tutorial_message("UNLOCKED: Seaweed Snare. Its vines slow enemies and set up bonus damage.")
 	elif current_level == 1 and wave_index == 2:
 		unlocked_towers = 3
-		set_tutorial_message("UNLOCKED: Urchin Cannon. It damages groups and counters Plankton. Try it, or start Wave 3.")
+		set_tutorial_message("UNLOCKED: Urchin Cannon. It damages groups and counters Plankton.")
 	elif current_level == 1 and wave_index == 3:
 		if tutorial_upgrade_done:
-			set_tutorial_message("Press X to sell a selected tower for 70% back, or start Wave 4.")
+			set_tutorial_message("Upgrade lesson complete. Your tower is stronger.")
 		else:
 			set_tutorial_message("Select a tower, press U, and choose one of its two upgrade paths before Wave 4.")
 	elif current_level == 1 and wave_index == 4:
-		set_tutorial_message("FINAL LESSON: A Giant Sea Spider is coming. Use upgraded damage towers for Wave 5.")
+		set_tutorial_message("A Giant Sea Spider is coming. Use upgraded damage towers for Wave 5.")
 	elif current_level == 3:
 		message = "Next attack: %s  •  Press Space when ready" % level_three_wave_names[wave_index].capitalize()
 	update_tower_menu()
@@ -1023,8 +1107,12 @@ func get_tower_texture(type: String) -> Texture2D:
 		_: return ShellShooterTexture
 
 func end_game(won: bool) -> void:
+	set_game_paused(false)
 	game_over = true
 	wave_active = false
+	level_select_can_resume = false
+	if is_instance_valid(resume_level_button):
+		resume_level_button.visible = false
 	upgrade_menu.visible = false
 	build_menu.visible = false
 	if won and current_level < FINAL_LEVEL:
@@ -1040,6 +1128,10 @@ func end_game(won: bool) -> void:
 	level_select_menu.visible = true
 
 func start_level(level_number: int) -> void:
+	set_game_paused(false)
+	level_select_can_resume = false
+	if is_instance_valid(resume_level_button):
+		resume_level_button.visible = false
 	for enemy in enemies:
 		if is_instance_valid(enemy): enemy.queue_free()
 	for tower in towers:
@@ -1106,7 +1198,8 @@ func update_hud() -> void:
 	if not gold_label: return
 	gold_label.text = "Gold: %d" % gold
 	health_label.text = "CORAL REEF: %d" % maxi(reef_health, 0)
-	wave_label.text = "LEVEL: %d  |  WAVE: %d/%d" % [current_level, wave_index, waves.size()]
+	wave_label.text = "WAVE: %d/%d" % [wave_index, waves.size()]
+	update_wave_control()
 
 func show_status(message: String, duration: float) -> void:
 	status_label.text = message

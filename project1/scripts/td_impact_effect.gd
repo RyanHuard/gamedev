@@ -8,6 +8,7 @@ var duration := 0.38
 func setup(type: String, radius: float) -> void:
 	effect_type = type
 	effect_radius = radius
+	process_mode = Node.PROCESS_MODE_PAUSABLE
 	z_index = 4
 	queue_redraw()
 
