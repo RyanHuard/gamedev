@@ -3,6 +3,8 @@ extends Node2D
 const ShellShooterTexture = preload("res://assets/towers/shell_shooter_v2.png")
 const SeaweedSnareTexture = preload("res://assets/towers/seaweed_snare.png")
 const UrchinCannonTexture = preload("res://assets/towers/urchin_cannon.png")
+const MAX_OPERATOR_SHOTS := 6
+const OPERATOR_RECHARGE_SECONDS := 3.0
 
 var tower_type := "shell"
 var game: Node2D
@@ -14,6 +16,8 @@ var cooldown := 0.0
 var reload_duration := 0.0
 var selected := false
 var operated := false
+var operator_shots_remaining := MAX_OPERATOR_SHOTS
+var operator_recharge_clock := 0.0
 var total_spent := 0
 var shot_time := 0.0
 var shot_duration := 0.22
@@ -53,6 +57,12 @@ func _process(delta: float) -> void:
 	cooldown = maxf(0.0, cooldown - delta)
 	if operated:
 		queue_redraw()
+	elif operator_shots_remaining < MAX_OPERATOR_SHOTS:
+		operator_recharge_clock += delta
+		if operator_recharge_clock >= OPERATOR_RECHARGE_SECONDS:
+			operator_recharge_clock -= OPERATOR_RECHARGE_SECONDS
+			operator_shots_remaining += 1
+			queue_redraw()
 	if shot_time > 0.0:
 		shot_time = maxf(shot_time - delta, 0.0)
 		queue_redraw()
@@ -84,12 +94,17 @@ func fire(target: Node2D, info: Dictionary, operator_boost: bool) -> void:
 	game.tower_fired(tower_type)
 
 func try_manual_fire(screen_position: Vector2) -> bool:
-	if not operated or cooldown > 0.0 or not is_instance_valid(game) or game.game_over:
+	if not operated or operator_shots_remaining <= 0 or cooldown > 0.0 or not is_instance_valid(game) or game.game_over:
 		return false
 	var target: Node2D = game.get_target_near_point(screen_position, position, get_effective_range())
 	if not is_instance_valid(target):
 		return false
 	fire(target, get_tower_info(tower_type), true)
+	operator_shots_remaining -= 1
+	operator_recharge_clock = 0.0
+	queue_redraw()
+	if operator_shots_remaining <= 0:
+		game.on_operator_charge_empty(self)
 	return true
 
 func set_selected(value: bool) -> void:
@@ -102,6 +117,9 @@ func set_operated(value: bool) -> void:
 		cooldown = minf(cooldown, 0.15)
 		reload_duration = maxf(cooldown, 0.15)
 	queue_redraw()
+
+func can_be_operated() -> bool:
+	return operator_shots_remaining > 0
 
 func get_reload_progress() -> float:
 	if cooldown <= 0.0 or reload_duration <= 0.0:
@@ -145,6 +163,15 @@ func _draw() -> void:
 		if reload_progress > 0.0:
 			var reload_color := Color(0.53, 0.97, 0.87, 0.85) if reload_progress >= 1.0 else Color(1.0, 0.84, 0.35, 0.82)
 			draw_arc(Vector2.ZERO, reload_radius, -PI / 2.0, -PI / 2.0 + TAU * reload_progress, 24, reload_color, 2.5)
+	var crab_nearby := false
+	if is_instance_valid(game) and is_instance_valid(game.crab_operator):
+		crab_nearby = position.distance_to(game.crab_operator.position) <= 105.0
+	if operated or selected or (operator_shots_remaining < MAX_OPERATOR_SHOTS and crab_nearby):
+		for pip in range(MAX_OPERATOR_SHOTS):
+			var pip_color := Color(0.53, 0.97, 0.87, 0.90) if pip < operator_shots_remaining else Color(0.02, 0.12, 0.18, 0.72)
+			var pip_column := pip % 2
+			var pip_row := pip / 2
+			draw_rect(Rect2(39 + pip_column * 5, -8 + pip_row * 6, 3, 3), pip_color)
 	var texture := ShellShooterTexture
 	if tower_type == "seaweed": texture = SeaweedSnareTexture
 	elif tower_type == "urchin": texture = UrchinCannonTexture

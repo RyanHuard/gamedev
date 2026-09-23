@@ -56,6 +56,9 @@ func toggle_operation() -> void:
 	if not is_instance_valid(nearest):
 		game.show_status("Move closer to a tower, then press E", 2.0)
 		return
+	if not nearest.can_be_operated():
+		game.show_status("That tower is recharging  •  Mount another tower", 2.2)
+		return
 	operated_tower = nearest
 	position = operated_tower.position
 	operated_tower.set_operated(true)
@@ -70,6 +73,12 @@ func release_tower() -> void:
 		operated_tower.set_operated(false)
 	operated_tower = null
 	queue_redraw()
+
+func exhaust_tower(tower: Node2D) -> void:
+	if operated_tower != tower:
+		return
+	release_tower()
+	game.show_status("Operator charge empty  •  Mount another tower while this one recovers", 3.0)
 
 func is_operating() -> bool:
 	return is_instance_valid(operated_tower)

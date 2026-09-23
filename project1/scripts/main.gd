@@ -713,9 +713,13 @@ func place_tower(place_position: Vector2, type: String) -> void:
 
 func on_tower_operated(_tower: Node2D) -> bool:
 	if current_level == 1 and wave_index == 0:
-		set_tutorial_message("Tower mounted. This gives 40% more damage, faster firing, and 8% extra range. Press SPACE to start Wave 1. Click Plankton inside the mounted tower's range to fire. Press E to dismount.")
+		set_tutorial_message("Tower mounted. This gives 40% more damage, faster firing, and 8% extra range. Its 6 pips are your manual shots. Press SPACE to start Wave 1. Click Plankton inside range to fire. Press E to dismount.")
 		return true
 	return false
+
+func on_operator_charge_empty(tower: Node2D) -> void:
+	if is_instance_valid(crab_operator):
+		crab_operator.exhaust_tower(tower)
 
 func set_selected_tower(tower: Node2D) -> void:
 	if is_instance_valid(selected_tower): selected_tower.set_selected(false)
