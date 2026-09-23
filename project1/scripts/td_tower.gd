@@ -16,6 +16,7 @@ var cooldown := 0.0
 var reload_duration := 0.0
 var selected := false
 var operated := false
+var is_mount_candidate := false
 var operator_shots_remaining := MAX_OPERATOR_SHOTS
 var operator_recharge_clock := 0.0
 var total_spent := 0
@@ -55,6 +56,8 @@ func setup(type: String, game_node: Node2D, new_pad: int) -> void:
 
 func _process(delta: float) -> void:
 	cooldown = maxf(0.0, cooldown - delta)
+	if is_mount_candidate:
+		queue_redraw()
 	if operated:
 		queue_redraw()
 	elif operator_shots_remaining < MAX_OPERATOR_SHOTS:
@@ -118,6 +121,10 @@ func set_operated(value: bool) -> void:
 		reload_duration = maxf(cooldown, 0.15)
 	queue_redraw()
 
+func set_mount_candidate(value: bool) -> void:
+	is_mount_candidate = value
+	queue_redraw()
+
 func can_be_operated() -> bool:
 	return operator_shots_remaining > 0
 
@@ -150,6 +157,12 @@ func get_effective_range() -> float:
 	return result * 1.08 if operated else result
 
 func _draw() -> void:
+	if is_mount_candidate and not operated:
+		var pulse := 0.65 + sin(Time.get_ticks_msec() * 0.008) * 0.20
+		var candidate_color := Color(0.56, 0.98, 0.84, pulse)
+		draw_circle(Vector2.ZERO, 39.0, Color(0.22, 0.85, 0.68, 0.10))
+		draw_arc(Vector2.ZERO, 39.0, 0, TAU, 32, candidate_color, 3.0)
+		draw_colored_polygon(PackedVector2Array([Vector2(-7, -48), Vector2(7, -48), Vector2(0, -39)]), candidate_color)
 	if selected or operated:
 		var radius: float = get_effective_range()
 		var range_color := Color(1.0, 0.78, 0.22, 0.13) if operated else Color(1, 1, 1, 0.08)

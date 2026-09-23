@@ -20,9 +20,10 @@ const FINAL_LEVEL := 3
 const PROGRESS_SAVE_PATH := "user://reefguard_progress.cfg"
 const TESTING_UNLOCK_ALL_LEVELS := true
 const TOP_BAR_HEIGHT := 64.0
+const CRAB_TRACK_HALF_WIDTH := 28.0
 const OUTER_REEF_POSITION := Vector2(1180, 600)
 const MIDNIGHT_REEF_POSITION := Vector2(640, 385)
-const SHIPWRECK_RECT := Rect2(600, 345, 150, 58)
+const SHIPWRECK_RECT := Rect2(490, 265, 60, 190)
 const LEVEL_THREE_VENTS := [Vector2(315, 505), Vector2(685, 160), Vector2(970, 350)]
 const FLOOR_RIPPLE_ORIGINS := [Vector2(55, 650), Vector2(70, 250), Vector2(160, 135), Vector2(175, 500), Vector2(285, 390), Vector2(320, 610), Vector2(405, 520), Vector2(445, 115), Vector2(535, 265), Vector2(575, 430), Vector2(650, 590), Vector2(720, 240), Vector2(790, 400), Vector2(875, 650), Vector2(900, 145), Vector2(965, 470), Vector2(1035, 275), Vector2(1080, 665), Vector2(1160, 555), Vector2(1180, 360)]
 const FLOOR_SHELLS := [Vector2(65, 330), Vector2(115, 655), Vector2(145, 565), Vector2(205, 215), Vector2(300, 120), Vector2(385, 205), Vector2(430, 400), Vector2(505, 630), Vector2(610, 675), Vector2(690, 670), Vector2(735, 535), Vector2(790, 105), Vector2(850, 270), Vector2(940, 255), Vector2(975, 625), Vector2(1045, 555), Vector2(1115, 145), Vector2(1165, 690), Vector2(1220, 175), Vector2(1240, 475)]
@@ -45,6 +46,9 @@ var level_two_paths: Array[PackedVector2Array] = [
 		Vector2(820, 440), Vector2(1040, 440), Vector2(1180, 600)
 	])
 ]
+var shipwreck_bridge_path := PackedVector2Array([
+	Vector2(520, 280), Vector2(520, 440)
+])
 var level_three_paths: Array[PackedVector2Array] = [
 	PackedVector2Array([
 		Vector2(-40, 360), Vector2(190, 360), Vector2(190, 220),
@@ -149,7 +153,8 @@ func _draw() -> void:
 	draw_rect(Rect2(0, 0, 1280, 720), ocean_color)
 	draw_floor_ripples_and_shells()
 	var preview_routes: Array[int] = []
-	if current_level == 3 and not wave_active and wave_index < waves.size():
+	# Before every wave, bright current lines preview each route that will be used.
+	if not wave_active and wave_index < waves.size():
 		for group in waves[wave_index]:
 			var route_index := int(group.get("route", 0))
 			if not preview_routes.has(route_index): preview_routes.append(route_index)
@@ -161,11 +166,19 @@ func _draw() -> void:
 		if preview_routes.has(route_index):
 			draw_polyline(route, Color("#7deaff"), 6.0, false)
 	if current_level == 2:
-		# Simple shipwreck obstacle separating the two currents.
-		draw_rect(SHIPWRECK_RECT, Color("#422f2a"))
-		draw_rect(Rect2(SHIPWRECK_RECT.position + Vector2(10, 9), Vector2(126, 34)), Color("#80563e"))
-		draw_line(Vector2(672, 345), Vector2(672, 306), Color("#3a2927"), 7.0)
-		draw_polygon(PackedVector2Array([Vector2(675, 310), Vector2(722, 327), Vector2(675, 327)]), PackedColorArray([Color("#b68a58")]))
+		# The grounded wreck bridges the upper and lower currents for the crab.
+		var wreck_hull := PackedVector2Array([
+			Vector2(499, 275), Vector2(541, 275), Vector2(550, 435),
+			Vector2(520, 454), Vector2(490, 435)
+		])
+		draw_colored_polygon(wreck_hull, Color("#4a3028"))
+		draw_rect(Rect2(500, 280, 40, 158), Color("#8c6142"))
+		for plank_y in range(290, 438, 20):
+			draw_line(Vector2(500, plank_y), Vector2(540, plank_y), Color("#c0905b"), 3.0)
+		draw_line(Vector2(508, 278), Vector2(508, 440), Color("#442c27"), 4.0)
+		draw_line(Vector2(532, 278), Vector2(532, 440), Color("#442c27"), 4.0)
+		draw_line(Vector2(520, 332), Vector2(565, 332), Color("#3a2927"), 6.0)
+		draw_polygon(PackedVector2Array([Vector2(564, 335), Vector2(564, 292), Vector2(594, 327)]), PackedColorArray([Color("#b68a58")]))
 	elif current_level == 3:
 		for vent in LEVEL_THREE_VENTS:
 			draw_circle(vent, 43.0, Color("#14243b"))
@@ -704,7 +717,7 @@ func place_tower(place_position: Vector2, type: String) -> void:
 	if current_level == 1:
 		match type:
 			"shell":
-				if wave_index == 0: set_tutorial_message("Move with WASD. Stand near any tower and press E to operate it.")
+				if wave_index == 0: set_tutorial_message("The blue line previews the enemy route. Move with WASD along the track. Stand near a highlighted tower and press E to operate it.")
 			"seaweed": set_tutorial_message("Seaweed slows and wraps enemies. Shell and Urchin attacks deal +40% to wrapped targets. Start Wave 2.")
 			"urchin": set_tutorial_message("Urchins damage groups and counter Plankton and armored Stingrays. Start Wave 3.")
 	play_tone(510.0, 0.1, 0.12)
@@ -774,11 +787,12 @@ func choose_upgrade(option: int) -> void:
 func sell_selected() -> void:
 	if not is_instance_valid(selected_tower): return
 	upgrade_menu.visible = false
-	if is_instance_valid(crab_operator) and crab_operator.operated_tower == selected_tower:
+	var tower_to_sell := selected_tower
+	if is_instance_valid(crab_operator) and crab_operator.operated_tower == tower_to_sell:
 		crab_operator.release_tower()
-	gold += selected_tower.get_refund()
-	towers.erase(selected_tower)
-	selected_tower.queue_free()
+	gold += tower_to_sell.get_refund()
+	towers.erase(tower_to_sell)
+	tower_to_sell.queue_free()
 	selected_tower = null
 	update_hud()
 	queue_redraw()
@@ -789,7 +803,7 @@ func start_next_wave() -> void:
 		show_status("Build at least one Shell Shooter first", 2.5)
 		return
 	if current_level == 1 and wave_index == 0 and (not is_instance_valid(crab_operator) or not crab_operator.is_operating()):
-		set_tutorial_message("Move with WASD. Stand near any tower and press E to operate it.")
+		set_tutorial_message("The blue line previews the enemy route. Move with WASD along the track. Stand near a highlighted tower and press E to operate it.")
 		return
 	if current_level == 1:
 		if wave_index == 3 and not tutorial_upgrade_done:
@@ -943,6 +957,41 @@ func get_nearest_tower(point: Vector2, max_distance: float) -> Node2D:
 			nearest_distance = distance
 	return nearest
 
+func get_nearest_track_point(point: Vector2) -> Vector2:
+	var nearest_point := coral_reef_position
+	var nearest_distance := INF
+	for route in active_paths:
+		for i in range(route.size() - 1):
+			var candidate := Geometry2D.get_closest_point_to_segment(point, route[i], route[i + 1])
+			var distance := point.distance_squared_to(candidate)
+			if distance < nearest_distance:
+				nearest_distance = distance
+				nearest_point = candidate
+	if current_level == 2:
+		for i in range(shipwreck_bridge_path.size() - 1):
+			var candidate := Geometry2D.get_closest_point_to_segment(point, shipwreck_bridge_path[i], shipwreck_bridge_path[i + 1])
+			var distance := point.distance_squared_to(candidate)
+			if distance < nearest_distance:
+				nearest_distance = distance
+				nearest_point = candidate
+	return nearest_point
+
+func constrain_crab_to_track(point: Vector2) -> Vector2:
+	var nearest := get_nearest_track_point(point)
+	var offset := point - nearest
+	if offset.length() <= CRAB_TRACK_HALF_WIDTH:
+		return point
+	return nearest + offset.normalized() * CRAB_TRACK_HALF_WIDTH
+
+func is_operator_reachable(point: Vector2) -> bool:
+	return point.distance_to(get_nearest_track_point(point)) <= CRAB_TRACK_HALF_WIDTH + CrabOperatorScript.OPERATE_RADIUS
+
+func get_crab_spawn_position() -> Vector2:
+	if active_paths.is_empty() or active_paths[0].size() < 2:
+		return coral_reef_position
+	var route := active_paths[0]
+	return route[route.size() - 1].move_toward(route[route.size() - 2], 82.0)
+
 func get_enemies_near(origin: Vector2, radius: float) -> Array[Node2D]:
 	var result: Array[Node2D] = []
 	for enemy in enemies:
@@ -1042,7 +1091,7 @@ func start_level(level_number: int) -> void:
 	if current_level == 3:
 		show_status("The first attack comes from the west current", 6.0)
 	elif current_level == 2:
-		show_status("Enemies approach along two separate routes", 6.0)
+		show_status("Blue lines preview both enemy routes  •  Build defenses, then press Space", 6.0)
 	else:
 		set_tutorial_message("Open BUILD menu and place a Shell Shooter in the water.")
 		clear_status()
@@ -1051,7 +1100,7 @@ func spawn_crab_operator() -> void:
 	crab_operator = CrabOperatorScript.new()
 	crab_operator.add_to_group("level_transient")
 	add_child(crab_operator)
-	crab_operator.setup(self, Vector2(640, 610))
+	crab_operator.setup(self, get_crab_spawn_position())
 
 func update_hud() -> void:
 	if not gold_label: return
